@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.templatetags.static import static
+from django.utils import timezone
+from datetime import timedelta
 
 
 class User(AbstractUser):
@@ -13,6 +15,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    #これがあることでusernameを簡単にデータベース（管理画面）に表示させることができる
 
     @property
     def icon_url(self):
@@ -28,6 +31,42 @@ class Post(models.Model):
     img = models.ImageField(upload_to="posts/")
     note = models.CharField(max_length=300, blank=True)
     post_date = models.DateTimeField(auto_now_add=True)
-
     def __str__(self):
         return f"{self.user.username} : {self.post_date}"
+
+class Comment(models.Model):
+    user = models.ForeignKey(
+        "User", on_delete = models.CASCADE, related_name="comments"
+    )
+    post = models.ForeignKey(
+        "Post", on_delete = models.CASCADE,related_name="comments"
+    )
+    text = models.CharField(
+        max_length = 150
+    )
+    post_date = models.DateTimeField(
+        auto_now_add = True
+    )
+
+    def get_elapsed_time(self):
+        delta = timezone.now() - self.time
+
+        zero = timedelta()
+        one_hour = timedelta(hours=1)
+        one_day = timedelta(days=1)
+        one_week = timedelta(days=7)
+
+        if delta < zero:
+            raise ValueError("未来の時刻ですぅ")
+
+        if delta < one_hour:
+            return f"{delta.seconds // 60} 分前"
+        elif delta < one_day:
+            return f"{delta.seconds // 3600} 時間前"
+        elif delta < one_week:
+            return f"{delta.days} 日前"
+        else:
+            return "1 週間以上前" 
+        
+    def __str__(self):
+        return f"{self.user.username} → ({self.post}) : {self.post_date}"

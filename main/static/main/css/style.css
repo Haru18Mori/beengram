@@ -264,6 +264,17 @@ body {
     margin: 0 16px;
 }
 
+.post__comment i{
+    font-size: 32px;
+    margin: 4px 0;
+}
+
+.post__comment {
+    font-weight: 500;
+    font-size: large;
+    color: rgb(57, 57, 57);
+}
+
 .post__user {
     margin: 0 16px 0 auto;
 }
@@ -459,3 +470,4 @@ a.profile-counter {
     display: block;
     width: 100%;
 }
+

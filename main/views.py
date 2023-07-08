@@ -13,7 +13,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse_lazy
 from django.views.generic.base import RedirectView, View
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView,FormView
 from django.views.generic.list import ListView
 
 from .forms import (
@@ -22,8 +22,9 @@ from .forms import (
     ProfileEditForm,
     SearchForm,
     SignUpForm,
+    CommentForm,
 )
-from .models import Post
+from .models import Post,Comment
 
 User = get_user_model()
 
@@ -31,7 +32,7 @@ User = get_user_model()
 class PostListView(LoginRequiredMixin, ListView):
     model = Post
     ordering = ("-post_date",)
-    paginate_by = 20
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related("user")
@@ -135,6 +136,12 @@ class PostDetailView(LoginRequiredMixin, DetailView):
             .get_queryset()
             .select_related("user")
         )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = get_object_or_404(Post, pk=self.kwargs["pk"])
+        context["comments"] = post.comments.order_by("post_date")
+        return context
 
 
 class ProfileEditView(LoginRequiredMixin, UpdateView):
@@ -273,3 +280,13 @@ class PostLikeAPIView(LoginRequiredMixin, View):
         except Post.DoesNotExist:
             result = "DoesNotExist"
         return JsonResponse({"result": result})
+
+class CommentView(LoginRequiredMixin,CreateView):
+    model = Comment
+    form_class = CommentForm
+    success_url = reverse_lazy("home")
+
+    def get_form_kwargs(self):
+        post = get_object_or_404(Post, pk=self.kwargs["post_pk"])
+        self.object = self.model(user=self.request.user, post=post)
+        return super().get_form_kwargs()

@@ -4,6 +4,7 @@ __pycache__/
 # db.sqlite3
 local_settings.py
 staticfiles/
+db.sqlite3
 media/icons/*
 media/posts/*
 !media/icons/1280463_s.jpg
